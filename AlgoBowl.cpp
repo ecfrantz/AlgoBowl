@@ -27,6 +27,7 @@ struct Action
 
 /// Loads an input file by a specified path
 /// string:path - path to file input
+/// vector<int> - the list of numbers loaded from the file
 vector<int> loadInput(string path)
 {
    // Create input file stream
@@ -74,30 +75,51 @@ void saveOutput(string path, vector<Action> actions)
    outFile.close();
 }
 
+/// Performs the algorithm for finding the estimated optimal addition chain for a set of given inputs
+/// vector<int>:numbers - the input set of numbers to the problem
+/// vector<Action> - the ordered list of actions performed to solve the problem
+vector<Action> findOptimalAdditionChain(vector<int> numbers)
+{
+   vector<Action> performedActions;
+
+   return performedActions;
+}
+
 int main()
 {
    // Get input file name from user.
    string inFileName;
-   cout << "Please enter a file name: ";
+   cout << "Please enter an input file name: ";
    cin >> inFileName;
+
+   // Get output file name from user.
+   string outFileName;
+   cout << "Please enter an output file name: ";
+   cin >> outFileName;
 
    // Load inputs from file.
    vector<int> inputs = loadInput(inFileName);
 
-   vector<vector<int> additions> groups;
-   vector<int> created;
+   // Perform algorithm.
+   vector<Action> actions = findOptimalAdditionChain(inputs);
 
-   while (created != inputs)
-   {
-      for (int i = 0; i < inputs; i++)
-      {
-         for (int j = i; j < inputs; j++)
-         {
-            int sum = inputs[i] + inputs[j];
-            groups[i].push_back(sum);
-            groups[i].push_back(inputs[i]);
-            groups[i].push_back(inputs[i]);
-         }
-      }
-   }
+   // Save outputs to file.
+   saveOutput(outFileName, actions);
+
+   // vector<vector<int> additions> groups;
+   // vector<int> created;
+
+   // while (created != inputs)
+   // {
+   //    for (int i = 0; i < inputs; i++)
+   //    {
+   //       for (int j = i; j < inputs; j++)
+   //       {
+   //          int sum = inputs[i] + inputs[j];
+   //          groups[i].push_back(sum);
+   //          groups[i].push_back(inputs[i]);
+   //          groups[i].push_back(inputs[i]);
+   //       }
+   //    }
+   // }
 }
