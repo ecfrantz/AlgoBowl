@@ -149,6 +149,28 @@ void computeNewActions(int newBasis, set<int> *basisNumbers, set<Action> *availa
    }
 }
 
+/// Compute the costs of each action available
+/// set<Action>:availableActions - all available actions
+/// set<int>:basisNumbers - set of sorted basis numbers
+/// set<int>:targetNumbers - set of sorted target numbers
+void computeActionCosts(set<Action> *availableActions, set<int> *basisNumbers, set<int> *targetNumbers)
+{
+   // Copy the available actions set into a temporary copy set
+   set<Action> c_availableActions(*availableActions);
+
+   // Clear the original set of available actions
+   availableActions->clear();
+
+   // Recalculate the costs of actions and add each action to the available actions set now that it has been cleared
+   for (auto action = c_availableActions.begin(); action != c_availableActions.end(); action++)
+   {
+      // Calculate the cost and add action
+      Action recalculatedAction(*action);
+      //recalculatedAction.cost = computeActionCost(action, basisNumbers, targetNumbers);
+      availableActions->insert(recalculatedAction);
+   }
+}
+
 /// Performs the algorithm for finding the estimated optimal addition chain for a set of given inputs
 /// vector<int>:targetNumbers - the input set of numbers to the problem
 /// vector<Action> - the ordered list of actions performed to solve the problem
@@ -169,6 +191,7 @@ vector<Action> *findOptimalAdditionChain(set<int> *targetNumbers)
       // Compute new available actions from most recently added basis number
       // Compute the costs of each of all available actions and sort the actions based on cost
       computeNewActions(newBasisNumber, &basisNumbers, &availableActions);
+      computeActionCosts(&availableActions, &basisNumbers, targetNumbers);
 
       // Perform the minimum cost action and update actions and numbers
       performAction(*availableActions.begin(), &performedActions, &availableActions, &basisNumbers, targetNumbers);
