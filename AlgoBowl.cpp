@@ -2,6 +2,7 @@ using namespace std;
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <set>
 #include <vector>
 #include <utility>
 #include <math.h>
@@ -11,24 +12,37 @@ using namespace std;
 /// int:sum - summand1 + summand2 (result of action)
 /// int:sumand1 - the first number in the sum
 /// int:sumand2 - the second number in the sum
+/// int:cost - the cost of performing the action
 struct Action
 {
    int sum;
    int sumand1;
    int sumand2;
+   int cost;
 
    Action(int msum, int msumand1, int msumand2)
    {
       sum = msum;
       sumand1 = msumand1;
       sumand2 = msumand2;
+      cost = 0;
    }
 };
 
+/// Less than / greater than operators for sorting actions based on cost
+bool operator<(const Action &x, const Action &y)
+{
+   return x.cost < y.cost;
+}
+bool operator>(const Action &x, const Action &y)
+{
+   return x.cost > y.cost;
+}
+
 /// Loads an input file by a specified path
 /// string:path - path to file input
-/// vector<int> - the list of numbers loaded from the file
-vector<int> loadInput(string path)
+/// set<int> - the list of numbers loaded from the file
+set<int> *loadInput(string path)
 {
    // Create input file stream
    ifstream inFile(path);
@@ -41,7 +55,7 @@ vector<int> loadInput(string path)
    }
 
    // Initialize integers
-   vector<int> numbers;
+   set<int> numbers;
    int number;
 
    // Ignore first line because it only contains the number of numbers
@@ -50,56 +64,85 @@ vector<int> loadInput(string path)
    while (inFile.eof() == false)
    {
       inFile >> number;
-      numbers.push_back(number);
+      numbers.insert(number);
    }
    inFile.close();
 
-   return numbers;
+   return &numbers;
 }
 
 /// Saves an output file by a specified path with actions
 /// string:path - path to file output
 /// vector<Action>:actions - properly ordered list of actions
-void saveOutput(string path, vector<Action> actions)
+void saveOutput(string path, vector<Action> *actions)
 {
    // Create output file stream
    ofstream outFile(path);
 
    // Write number of actions on first line
-   outFile << actions.size() << endl;
+   outFile << actions->size() << endl;
    // Write each action on following lines
-   for (auto action = actions.begin(); action != actions.end(); action++)
+   for (auto action = actions->begin(); action != actions->end(); action++)
    {
       outFile << action->sumand1 << ' ' << action->sumand2 << endl;
    }
    outFile.close();
 }
 
+/// Perform the logic for performing a specified action on the data
+/// Action:action - the action to be performed
+/// vector<Action>:performedActions - the list of previously performed actions
+/// set<Action>:availableActions - the set of actions that can be performed
+/// set<int>:basisNumbers - the set of numbers that have been already discovered
+/// set<int>:targetNumbers - the set of numbers that are targets to discover
+void performAction(Action action, vector<Action> *performedActions, set<Action> *availableActions, set<int> *basisNumbers, set<int> *targetNumbers)
+{
+   // Add action to performed actions
+   performedActions->push_back(action);
+
+   // Remove action from available actions
+   auto i = availableActions->begin();
+   while (i != availableActions->end())
+   {
+      if (i->sum == action.sum)
+         break;
+      i++;
+   }
+   if (i != availableActions->end())
+   {
+      availableActions->erase(i);
+   }
+
+   // Add sum to basis numbers and remove from numbers if possible
+   basisNumbers->insert(action.sum);
+   targetNumbers->erase(action.sum);
+}
+
 /// Performs the algorithm for finding the estimated optimal addition chain for a set of given inputs
-/// vector<int>:numbers - the input set of numbers to the problem
+/// vector<int>:targetNumbers - the input set of numbers to the problem
 /// vector<Action> - the ordered list of actions performed to solve the problem
-vector<Action> findOptimalAdditionChain(vector<int> numbers)
+vector<Action> *findOptimalAdditionChain(set<int> *targetNumbers)
 {
    // Setup storage for algorithm
    vector<Action> performedActions;
-   vector<Action> availableActions;
-   vector<int> actionCosts;
-   vector<int> basisNumbers;
+   set<Action> availableActions;
+   set<int> basisNumbers;
 
    // Initialize basis numbers
-   basisNumbers.push_back(1);
+   basisNumbers.insert(1);
 
    // Continue performing actions until algorithm finds all the numbers
-   while (numbers.size() > 0)
+   while (targetNumbers->size() > 0)
    {
       // Compute new available actions from most recently added basis number
       // Compute the costs of each of these new available actions and sort the actions based on cost
 
       // Perform the minimum cost action and update actions and numbers
+      performAction(*availableActions.begin(), &performedActions, &availableActions, &basisNumbers, targetNumbers);
    }
 
    // Return resulting action list
-   return performedActions;
+   return &performedActions;
 }
 
 int main()
@@ -115,10 +158,10 @@ int main()
    cin >> outFileName;
 
    // Load inputs from file.
-   vector<int> inputs = loadInput(inFileName);
+   set<int> *inputs = loadInput(inFileName);
 
    // Perform algorithm.
-   vector<Action> actions = findOptimalAdditionChain(inputs);
+   vector<Action> *actions = findOptimalAdditionChain(inputs);
 
    // Save outputs to file.
    saveOutput(outFileName, actions);
