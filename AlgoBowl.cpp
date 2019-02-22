@@ -146,6 +146,28 @@ void computeNewActions(int newBasis, set<int> *basisNumbers, set<Action> *availa
    }
 }
 
+/// Compute the cost of performing a particular action
+/// Action:action - action to compute the cost of
+/// set<int>:basisNumbers - set of numbers to use to construct targets
+/// set<int>:targetNumbers - set of target numbers to discover
+int computeActionCost(Action action, set<int> *basisNumbers, set<int> *targetNumbers)
+{
+   // Initialize accumulated cost across targets.
+   int sumCost = 0;
+
+   // Copy basis numbers so they can be modified separately in computations
+   set<int> c_basisNumbers(*basisNumbers);
+
+   // Sum up each of the costs for target numbers.
+   int offset = 0;
+   for (auto target = targetNumbers->begin(); target != targetNumbers->end(); target++)
+   {
+      sumCost += computeOptimalActionCount(*target, &c_basisNumbers, targetNumbers, offset++);
+   }
+
+   return sumCost;
+}
+
 /// Compute the costs of each action available
 /// set<Action>:availableActions - all available actions
 /// set<int>:basisNumbers - set of sorted basis numbers
@@ -163,7 +185,7 @@ void computeActionCosts(set<Action> *availableActions, set<int> *basisNumbers, s
    {
       // Calculate the cost and add action
       Action recalculatedAction(*action);
-      //recalculatedAction.cost = computeActionCost(action, basisNumbers, targetNumbers);
+      recalculatedAction.cost = computeActionCost(*action, basisNumbers, targetNumbers);
       availableActions->insert(recalculatedAction);
    }
 }
