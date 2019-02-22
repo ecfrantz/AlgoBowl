@@ -8,6 +8,24 @@ using namespace std;
 #include <math.h>
 #include <iomanip>
 
+/// Structure that represents an addition action.
+/// int:sum - summand1 + summand2 (result of action)
+/// int:sumand1 - the first number in the sum
+/// int:sumand2 - the second number in the sum
+struct Action
+{
+   int sum;
+   int sumand1;
+   int sumand2;
+
+   Action(int msum, int msumand1, int msumand2)
+   {
+      sum = msum;
+      sumand1 = msumand1;
+      sumand2 = msumand2;
+   }
+};
+
 /// Loads an input file by a specified path
 /// string:path - path to file input
 vector<int> loadInput(string path)
