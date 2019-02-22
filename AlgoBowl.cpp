@@ -118,6 +118,37 @@ void performAction(Action action, vector<Action> *performedActions, set<Action> 
    targetNumbers->erase(action.sum);
 }
 
+/// Compute new available actions given a newly added basis number
+/// int:newBasis - newly added basis number
+/// set<int>:basisNumbers - all basis numbers
+/// set<Action>:availableActions - set of currently available actions
+void computeNewActions(int newBasis, set<int> *basisNumbers, set<Action> *availableActions)
+{
+   // Only create new action sums from combinations with the new basis number.
+   for (auto basisNumber = basisNumbers->begin(); basisNumber != basisNumbers->end(); basisNumber++)
+   {
+      // Create new action from combination of basis numbers.
+      Action newAction(newBasis + *basisNumber, newBasis, *basisNumber);
+
+      // Check if the result of the action already exists in the available actions.
+      bool actionExists = false;
+      for (auto checkAction = availableActions->begin(); checkAction != availableActions->end(); checkAction++)
+      {
+         if (newAction.sum == checkAction->sum)
+         {
+            actionExists = true;
+            break;
+         }
+      }
+
+      // Only add new action if the result of the action does not already exist.
+      if (!actionExists)
+      {
+         availableActions->insert(newAction);
+      }
+   }
+}
+
 /// Performs the algorithm for finding the estimated optimal addition chain for a set of given inputs
 /// vector<int>:targetNumbers - the input set of numbers to the problem
 /// vector<Action> - the ordered list of actions performed to solve the problem
@@ -127,6 +158,7 @@ vector<Action> *findOptimalAdditionChain(set<int> *targetNumbers)
    vector<Action> performedActions;
    set<Action> availableActions;
    set<int> basisNumbers;
+   int newBasisNumber = 1;
 
    // Initialize basis numbers
    basisNumbers.insert(1);
@@ -135,7 +167,8 @@ vector<Action> *findOptimalAdditionChain(set<int> *targetNumbers)
    while (targetNumbers->size() > 0)
    {
       // Compute new available actions from most recently added basis number
-      // Compute the costs of each of these new available actions and sort the actions based on cost
+      // Compute the costs of each of all available actions and sort the actions based on cost
+      computeNewActions(newBasisNumber, &basisNumbers, &availableActions);
 
       // Perform the minimum cost action and update actions and numbers
       performAction(*availableActions.begin(), &performedActions, &availableActions, &basisNumbers, targetNumbers);
@@ -165,21 +198,4 @@ int main()
 
    // Save outputs to file.
    saveOutput(outFileName, actions);
-
-   // vector<vector<int> additions> groups;
-   // vector<int> created;
-
-   // while (created != inputs)
-   // {
-   //    for (int i = 0; i < inputs; i++)
-   //    {
-   //       for (int j = i; j < inputs; j++)
-   //       {
-   //          int sum = inputs[i] + inputs[j];
-   //          groups[i].push_back(sum);
-   //          groups[i].push_back(inputs[i]);
-   //          groups[i].push_back(inputs[i]);
-   //       }
-   //    }
-   // }
 }
