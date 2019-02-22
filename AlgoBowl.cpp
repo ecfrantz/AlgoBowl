@@ -80,8 +80,25 @@ void saveOutput(string path, vector<Action> actions)
 /// vector<Action> - the ordered list of actions performed to solve the problem
 vector<Action> findOptimalAdditionChain(vector<int> numbers)
 {
+   // Setup storage for algorithm
    vector<Action> performedActions;
+   vector<Action> availableActions;
+   vector<int> actionCosts;
+   vector<int> basisNumbers;
 
+   // Initialize basis numbers
+   basisNumbers.push_back(1);
+
+   // Continue performing actions until algorithm finds all the numbers
+   while (numbers.size() > 0)
+   {
+      // Compute new available actions from most recently added basis number
+      // Compute the costs of each of these new available actions and sort the actions based on cost
+
+      // Perform the minimum cost action and update actions and numbers
+   }
+
+   // Return resulting action list
    return performedActions;
 }
 
