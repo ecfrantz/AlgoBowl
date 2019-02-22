@@ -4,9 +4,6 @@ using namespace std;
 #include <fstream>
 #include <set>
 #include <vector>
-#include <utility>
-#include <math.h>
-#include <iomanip>
 
 /// Structure that represents an addition action.
 /// int:sum - summand1 + summand2 (result of action)
