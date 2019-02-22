@@ -1,10 +1,11 @@
-using namespace std;
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <set>
 #include <queue>
 #include <vector>
+
+using namespace std;
 
 /// Structure that represents an addition action.
 /// int:sum - summand1 + summand2 (result of action)
@@ -30,17 +31,21 @@ struct Action
 /// Less than / greater than operators for sorting actions based on cost
 bool operator<(const Action &x, const Action &y)
 {
+   if (x.cost == y.cost)
+      return x.sum < y.sum;
    return x.cost < y.cost;
 }
 bool operator>(const Action &x, const Action &y)
 {
+   if (x.cost == y.cost)
+      return x.sum > y.sum;
    return x.cost > y.cost;
 }
 
 /// Loads an input file by a specified path
 /// string:path - path to file input
 /// set<int> - the list of numbers loaded from the file
-set<int> *loadInput(string path)
+set<int> loadInput(string path)
 {
    // Create input file stream
    ifstream inFile(path);
@@ -66,7 +71,7 @@ set<int> *loadInput(string path)
    }
    inFile.close();
 
-   return &numbers;
+   return numbers;
 }
 
 /// Saves an output file by a specified path with actions
@@ -93,7 +98,7 @@ void saveOutput(string path, vector<Action> *actions)
 /// set<Action>:availableActions - the set of actions that can be performed
 /// set<int>:basisNumbers - the set of numbers that have been already discovered
 /// set<int>:targetNumbers - the set of numbers that are targets to discover
-void performAction(Action action, vector<Action> *performedActions, set<Action> *availableActions, set<int> *basisNumbers, set<int> *targetNumbers)
+void performAction(Action action, vector<Action> *performedActions, multiset<Action> *availableActions, set<int> *basisNumbers, set<int> *targetNumbers)
 {
    // Add action to performed actions
    performedActions->push_back(action);
@@ -120,7 +125,7 @@ void performAction(Action action, vector<Action> *performedActions, set<Action> 
 /// int:newBasis - newly added basis number
 /// set<int>:basisNumbers - all basis numbers
 /// set<Action>:availableActions - set of currently available actions
-void computeNewActions(int newBasis, set<int> *basisNumbers, set<Action> *availableActions)
+void computeNewActions(int newBasis, set<int> *basisNumbers, multiset<Action> *availableActions)
 {
    // Only create new action sums from combinations with the new basis number.
    for (auto basisNumber = basisNumbers->begin(); basisNumber != basisNumbers->end(); basisNumber++)
@@ -272,10 +277,10 @@ int computeActionCost(Action action, set<int> *basisNumbers, set<int> *targetNum
 /// set<Action>:availableActions - all available actions
 /// set<int>:basisNumbers - set of sorted basis numbers
 /// set<int>:targetNumbers - set of sorted target numbers
-void computeActionCosts(set<Action> *availableActions, set<int> *basisNumbers, set<int> *targetNumbers)
+void computeActionCosts(multiset<Action> *availableActions, set<int> *basisNumbers, set<int> *targetNumbers)
 {
    // Copy the available actions set into a temporary copy set
-   set<Action> c_availableActions(*availableActions);
+   multiset<Action> c_availableActions(*availableActions);
 
    // Clear the original set of available actions
    availableActions->clear();
@@ -293,11 +298,11 @@ void computeActionCosts(set<Action> *availableActions, set<int> *basisNumbers, s
 /// Performs the algorithm for finding the estimated optimal addition chain for a set of given inputs
 /// vector<int>:targetNumbers - the input set of numbers to the problem
 /// vector<Action> - the ordered list of actions performed to solve the problem
-vector<Action> *findOptimalAdditionChain(set<int> *targetNumbers)
+vector<Action> findOptimalAdditionChain(set<int> targetNumbers)
 {
    // Setup storage for algorithm
    vector<Action> performedActions;
-   set<Action> availableActions;
+   multiset<Action> availableActions;
    set<int> basisNumbers;
    int newBasisNumber = 1;
 
@@ -305,19 +310,20 @@ vector<Action> *findOptimalAdditionChain(set<int> *targetNumbers)
    basisNumbers.insert(1);
 
    // Continue performing actions until algorithm finds all the numbers
-   while (targetNumbers->size() > 0)
+   while (targetNumbers.size() > 0)
    {
       // Compute new available actions from most recently added basis number
       // Compute the costs of each of all available actions and sort the actions based on cost
       computeNewActions(newBasisNumber, &basisNumbers, &availableActions);
-      computeActionCosts(&availableActions, &basisNumbers, targetNumbers);
+      computeActionCosts(&availableActions, &basisNumbers, &targetNumbers);
 
       // Perform the minimum cost action and update actions and numbers
-      performAction(*availableActions.begin(), &performedActions, &availableActions, &basisNumbers, targetNumbers);
+      performAction(*availableActions.begin(), &performedActions, &availableActions, &basisNumbers, &targetNumbers);
+      newBasisNumber = performedActions.rbegin()->sum;
    }
 
    // Return resulting action list
-   return &performedActions;
+   return performedActions;
 }
 
 int main()
@@ -333,11 +339,11 @@ int main()
    cin >> outFileName;
 
    // Load inputs from file.
-   set<int> *inputs = loadInput(inFileName);
+   set<int> inputs = loadInput(inFileName);
 
    // Perform algorithm.
-   vector<Action> *actions = findOptimalAdditionChain(inputs);
+   vector<Action> actions = findOptimalAdditionChain(inputs);
 
    // Save outputs to file.
-   saveOutput(outFileName, actions);
+   saveOutput(outFileName, &actions);
 }
