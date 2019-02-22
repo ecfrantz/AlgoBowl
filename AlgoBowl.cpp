@@ -3,6 +3,7 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 #include <set>
+#include <queue>
 #include <vector>
 
 /// Structure that represents an addition action.
@@ -146,12 +147,111 @@ void computeNewActions(int newBasis, set<int> *basisNumbers, set<Action> *availa
    }
 }
 
+/// Compute the heuristic optimal number of actions to achieve a target
+/// int:target - the target number to discover
+/// set<int>:modifiableBasisNumbers - the set of numbers to use as a basis that can be modified
+int computeOptimalActionCount(int target, set<int> *modifiableBasisNumbers)
+{
+   // Get the maximum value in our basis numbers to determine if we need to do doubling
+   int max_value = *(--modifiableBasisNumbers->end());
+   int actions = 0;
+
+   // Double the maximum value while too low to reach the target
+   while (target >= 2 * max_value)
+   {
+      // Double the maximum value and add it to the basis numbers
+      max_value += max_value;
+      modifiableBasisNumbers->insert(max_value);
+      actions++;
+   }
+
+   // Shortcut return cost if target equals maximum value
+   if (target == max_value)
+   {
+      return actions;
+   }
+
+   // Initialize residual pathfinding storage
+   queue<vector<int>> residuals;
+   vector<int> initial_residual;
+   initial_residual.push_back(target - max_value);
+   residuals.push(initial_residual);
+
+   // Continue looping over residuals until a residual of zero is found
+   while (true)
+   {
+      // Pop the next residual from the residuals
+      vector<int> current_residual = residuals.front();
+      residuals.pop();
+
+      // Try combining current residual with all current bases
+      for (auto base = modifiableBasisNumbers->rbegin(); base != modifiableBasisNumbers->rend(); base++)
+      {
+         // An exact match for the residual was found
+         if (*current_residual.begin() == *base)
+         {
+            // Insert the target and numbers used to get to target to basis numbers
+            modifiableBasisNumbers->insert(target);
+            for (auto added_base = current_residual.rbegin(); added_base != current_residual.rend() - 1; added_base++)
+            {
+               modifiableBasisNumbers->insert(*added_base);
+            }
+
+            // Return combined double time and residual time
+            return actions + current_residual.size();
+         }
+         // Construct new smaller residual
+         else if (*current_residual.begin() > *base)
+         {
+            // Construct new residual and add it to the residual collection
+            vector<int> new_residual(current_residual);
+            *new_residual.begin() = *current_residual.begin() - *base;
+            new_residual.push_back(target - *current_residual.begin() + *base);
+            residuals.push(new_residual);
+         }
+      }
+
+      // Try combining current residual with all previous residual bases
+      for (auto base = current_residual.rbegin(); base != current_residual.rend() - 1; base++)
+      {
+         // An exact match for the residual was found
+         if (*current_residual.begin() == *base)
+         {
+            // Insert the target and numbers used to get to target to basis numbers
+            modifiableBasisNumbers->insert(target);
+            for (auto added_base = current_residual.rbegin(); added_base != current_residual.rend() - 1; added_base++)
+            {
+               modifiableBasisNumbers->insert(*added_base);
+            }
+
+            // Return combined double time and residual time
+            return actions + current_residual.size();
+         }
+         // Construct new smaller residual
+         else if (*current_residual.begin() > *base)
+         {
+            // Construct new residual and add it to the residual collection
+            vector<int> new_residual(current_residual);
+            *new_residual.begin() = *current_residual.begin() - *base;
+            new_residual.push_back(target - *current_residual.begin() + *base);
+            residuals.push(new_residual);
+         }
+      }
+   }
+}
+
 /// Compute the cost of performing a particular action
 /// Action:action - action to compute the cost of
 /// set<int>:basisNumbers - set of numbers to use to construct targets
 /// set<int>:targetNumbers - set of target numbers to discover
 int computeActionCost(Action action, set<int> *basisNumbers, set<int> *targetNumbers)
 {
+   // Perform shortcut cost if action results in one of the target numbers
+   if (targetNumbers->find(action.sum) != targetNumbers->end())
+   {
+      return 0;
+   }
+
    // Initialize accumulated cost across targets.
    int sumCost = 0;
 
@@ -162,7 +262,7 @@ int computeActionCost(Action action, set<int> *basisNumbers, set<int> *targetNum
    int offset = 0;
    for (auto target = targetNumbers->begin(); target != targetNumbers->end(); target++)
    {
-      sumCost += computeOptimalActionCount(*target, &c_basisNumbers, targetNumbers, offset++);
+      sumCost += computeOptimalActionCount(*target, &c_basisNumbers);
    }
 
    return sumCost;
