@@ -2,7 +2,6 @@ using namespace std;
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <istream>
 #include <vector>
 #include <utility>
 #include <math.h>
@@ -52,8 +51,27 @@ vector<int> loadInput(string path)
       inFile >> number;
       numbers.push_back(number);
    }
+   inFile.close();
 
    return numbers;
+}
+
+/// Saves an output file by a specified path with actions
+/// string:path - path to file output
+/// vector<Action>:actions - properly ordered list of actions
+void saveOutput(string path, vector<Action> actions)
+{
+   // Create output file stream
+   ofstream outFile(path);
+
+   // Write number of actions on first line
+   outFile << actions.size() << endl;
+   // Write each action on following lines
+   for (auto action = actions.begin(); action != actions.end(); action++)
+   {
+      outFile << action->sumand1 << ' ' << action->sumand2 << endl;
+   }
+   outFile.close();
 }
 
 int main()
